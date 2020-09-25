@@ -26,7 +26,7 @@ public class Irc {
 
 	/**
 	 * main method
-	 * create a JVN object nammed IRC for representing the Chat application
+	 * create a JVN object named IRC for representing the Chat application
 	 **/
 	public static void main(String argv[]) {
 		try {

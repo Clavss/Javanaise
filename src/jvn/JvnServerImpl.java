@@ -67,7 +67,7 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public JvnObject jvnCreateObject(Serializable o) throws jvn.JvnException {
-		// to be completed 
+		// to be completed
 		return null;
 	}
 
@@ -79,11 +79,11 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException {
-		// to be completed 
+		// to be completed
 	}
 
 	/**
-	 * Provide the reference of a JVN object beeing given its symbolic name
+	 * Provide the reference of a JVN object being given its symbolic name
 	 *
 	 * @param jon : the JVN object name
 	 * @return the JVN object
