@@ -9,6 +9,9 @@
 
 package jvn;
 
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.*;
 
@@ -23,6 +26,7 @@ public class JvnServerImpl
 	private static final long serialVersionUID = 1L;
 	// A JVN server is managed as a singleton 
 	private static JvnServerImpl js = null;
+	private JvnRemoteCoord jvnRemoteCoord;
 
 	/**
 	 * Default constructor
@@ -31,7 +35,11 @@ public class JvnServerImpl
 	 **/
 	private JvnServerImpl() throws Exception {
 		super();
-		// to be completed
+		// Getting the registry
+		Registry registry = LocateRegistry.getRegistry(null);
+
+		// Looking up the registry for the remote object
+		jvnRemoteCoord = (JvnRemoteCoord) registry.lookup("IRC");
 	}
 
 	/**
@@ -67,8 +75,7 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public JvnObject jvnCreateObject(Serializable o) throws jvn.JvnException {
-		// to be completed
-		return null;
+		return new JvnObjectImpl(o);
 	}
 
 	/**
@@ -79,7 +86,11 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException {
-		// to be completed
+		try {
+			jvnRemoteCoord.jvnRegisterObject(jon, jo, jvnRemoteCoord.jvnGetObjectId(), this);
+		} catch (RemoteException e) {
+			throw new jvn.JvnException();
+		}
 	}
 
 	/**
@@ -90,8 +101,11 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public JvnObject jvnLookupObject(String jon) throws jvn.JvnException {
-		// to be completed
-		return null;
+		try {
+			return jvnRemoteCoord.jvnLookupObject(jon, this);
+		} catch (RemoteException e) {
+			throw new jvn.JvnException();
+		}
 	}
 
 	/**

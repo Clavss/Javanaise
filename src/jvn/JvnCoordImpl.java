@@ -10,7 +10,11 @@
 package jvn;
 
 import java.io.Serializable;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord {
@@ -18,7 +22,14 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	/**
 	 *
 	 */
+	int count = 0;
+	Map jvnObjectsMap = new HashMap();
 	private static final long serialVersionUID = 1L;
+
+	public static void main(String[] args) throws Exception {
+		LocateRegistry.createRegistry(1099);
+		JvnCoordImpl obj = new JvnCoordImpl();
+	}
 
 	/**
 	 * Default constructor
@@ -26,7 +37,9 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @throws JvnException
 	 **/
 	private JvnCoordImpl() throws Exception {
-		// to be completed
+		Registry registry = LocateRegistry.getRegistry();
+		registry.bind("IRC", this);
+		System.err.println("Server ready");
 	}
 
 	/**
@@ -38,7 +51,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	public int jvnGetObjectId()
 			throws java.rmi.RemoteException, jvn.JvnException {
 		// to be completed
-		return 0;
+		return count++;
 	}
 
 	/**
@@ -52,7 +65,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 **/
 	public void jvnRegisterObject(String jon, JvnObject jo, int joi, JvnRemoteServer js)
 			throws java.rmi.RemoteException, jvn.JvnException {
-		// to be completed
+				jvnObjectsMap.put(jon, jo);
 	}
 
 	/**
@@ -64,7 +77,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 **/
 	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
 			throws java.rmi.RemoteException, jvn.JvnException {
-		// to be completed
+		System.out.println("Hello world");
 		return null;
 	}
 
