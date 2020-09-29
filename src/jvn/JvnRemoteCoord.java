@@ -67,6 +67,8 @@ public interface JvnRemoteCoord extends Remote {
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
 	Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
+	
+	void jvnUnLock(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException;
 
 	/**
 	 * A JVN server terminates

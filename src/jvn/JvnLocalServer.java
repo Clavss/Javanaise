@@ -66,6 +66,8 @@ public interface JvnLocalServer {
 	 **/
 	Serializable jvnLockWrite(int joi) throws JvnException;
 
+	
+	Serializable jvnUnLock(int joi) throws JvnException;
 
 	/**
 	 * The JVN service is not used anymore by the application

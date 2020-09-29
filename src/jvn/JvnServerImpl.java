@@ -40,6 +40,12 @@ public class JvnServerImpl
 
 		// Looking up the registry for the remote object
 		jvnRemoteCoord = (JvnRemoteCoord) registry.lookup("IRC");
+		
+		js = this;
+	}
+	
+	public static JvnServerImpl getServer() {
+		return js;
 	}
 
 	/**
@@ -87,12 +93,14 @@ public class JvnServerImpl
 	 **/
 	public void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException {
 		try {
-			jvnRemoteCoord.jvnRegisterObject(jon, jo, jvnRemoteCoord.jvnGetObjectId(), this);
+			int id = jvnRemoteCoord.jvnGetObjectId();
+			jo.setID(id);
+			jvnRemoteCoord.jvnRegisterObject(jon, jo, id, this);
 		} catch (RemoteException e) {
 			throw new jvn.JvnException();
 		}
 	}
-
+	
 	/**
 	 * Provide the reference of a JVN object being given its symbolic name
 	 *
@@ -116,7 +124,11 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public Serializable jvnLockRead(int joi) throws JvnException {
-		// to be completed 
+		try {
+			jvnRemoteCoord.jvnLockRead(joi, this);
+		} catch (RemoteException e) {
+			throw new JvnException();
+		}
 		return null;
 
 	}
@@ -129,7 +141,16 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public Serializable jvnLockWrite(int joi) throws JvnException {
-		// to be completed 
+		// to be completed
+		return null;
+	}
+	
+	public Serializable jvnUnLock(int joi) throws JvnException {
+		try {
+			jvnRemoteCoord.jvnUnLock(joi, this);
+		} catch (RemoteException e) {
+			throw new JvnException();
+		}
 		return null;
 	}
 

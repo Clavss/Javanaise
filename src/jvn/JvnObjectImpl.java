@@ -3,41 +3,40 @@ package jvn;
 import java.io.Serializable;
 
 public class JvnObjectImpl implements JvnObject{
-    Serializable o;
-    boolean read, write;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	Serializable o;
+    JvnLockEnum lockState;
+    private int id;
 
     public JvnObjectImpl(Serializable serializableObject) {
         this.o = serializableObject;
     }
 
+    public void setID(int id) {
+    	this.id = id;
+    }
+    
     @Override
     public void jvnLockRead() throws JvnException {
-        read = true;
-
-
+    	JvnServerImpl.getServer().jvnLockRead(id);
     }
 
     @Override
     public void jvnLockWrite() throws JvnException {
-        write = true;
 
     }
 
     @Override
     public void jvnUnLock() throws JvnException {
-        if(read) {
-
-            read = false;
-        }
-        if(write){
-
-            write = false;
-        }
+    	JvnServerImpl.getServer().jvnUnLock(id);
     }
 
     @Override
     public int jvnGetObjectId() throws JvnException {
-        return 0;
+        return id;
     }
 
     @Override

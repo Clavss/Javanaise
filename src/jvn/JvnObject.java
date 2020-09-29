@@ -86,4 +86,6 @@ public interface JvnObject extends Serializable {
 	Serializable jvnInvalidateWriterForReader()
 			throws jvn.JvnException;
 
+	void setID(int id);
+
 }

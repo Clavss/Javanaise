@@ -13,8 +13,13 @@ import java.io.Serializable;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+
+import utils.Pair;
 
 
 public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord {
@@ -23,11 +28,13 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 *
 	 */
 	int count = 0;
-	Map jvnObjectsMap = new HashMap();
+	Map<String, JvnObject> jvnObjectsMap = new HashMap<>();
+	Map<Integer, Pair<List<JvnRemoteServer>, JvnLockEnum>> jvnLockMap = new HashMap<>();
+	Map<Integer, String> jvnJoinMap = new HashMap<>();
+	Map<Integer, List<Pair<JvnLockEnum,JvnRemoteServer>>> jvnObjectWaitMap = new HashMap<>();
 	private static final long serialVersionUID = 1L;
 
 	public static void main(String[] args) throws Exception {
-		LocateRegistry.createRegistry(1099);
 		JvnCoordImpl obj = new JvnCoordImpl();
 	}
 
@@ -37,7 +44,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @throws JvnException
 	 **/
 	private JvnCoordImpl() throws Exception {
-		Registry registry = LocateRegistry.getRegistry();
+		Registry registry = LocateRegistry.createRegistry(1099);
 		registry.bind("IRC", this);
 		System.err.println("Server ready");
 	}
@@ -65,7 +72,11 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 **/
 	public void jvnRegisterObject(String jon, JvnObject jo, int joi, JvnRemoteServer js)
 			throws java.rmi.RemoteException, jvn.JvnException {
+				js.jvnInvalidateReader(joi);
 				jvnObjectsMap.put(jon, jo);
+				jvnJoinMap.put(joi, jon);
+				jvnObjectWaitMap.put(joi, new LinkedList<Pair<JvnLockEnum,JvnRemoteServer>>());
+				jvnLockMap.put(joi, new Pair<List<JvnRemoteServer>, JvnLockEnum>(getListFromRemoteServer(js), JvnLockEnum.NL));
 	}
 
 	/**
@@ -77,8 +88,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 **/
 	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
 			throws java.rmi.RemoteException, jvn.JvnException {
-		System.out.println("Hello world");
-		return null;
+		return jvnObjectsMap.get(jon);
 	}
 
 	/**
@@ -91,10 +101,56 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 **/
 	public Serializable jvnLockRead(int joi, JvnRemoteServer js)
 			throws java.rmi.RemoteException, JvnException {
-		// to be completed
-		return null;
+		switch (jvnLockMap.get(joi).getVal2()) {
+		case NL:
+			jvnLockMap.get(joi).setVal1(getListFromRemoteServer(js));
+			jvnLockMap.get(joi).setVal2(JvnLockEnum.R);
+			break;
+			
+		case R:
+			if (!jvnLockMap.get(joi).getVal1().contains(js)) {
+				jvnLockMap.get(joi).getVal1().add(js);
+			}
+			break;
+			
+		case RC:
+			if (!jvnLockMap.get(joi).getVal1().contains(js)) {
+				jvnLockMap.get(joi).setVal1(getListFromRemoteServer(js));
+			}
+			jvnLockMap.get(joi).setVal2(JvnLockEnum.R);
+			break;
+			
+		case W:
+			if (jvnLockMap.get(joi).getVal1() != js) {
+				jvnLockMap.get(joi).getVal1().get(0).jvnInvalidateWriterForReader(joi);
+				jvnObjectWaitMap.get(joi).add(new Pair<>(JvnLockEnum.R, js));
+			}
+			jvnLockMap.get(joi).setVal2(JvnLockEnum.NL);
+			break;
+			
+		case WC:
+		case RWC:
+			if (jvnLockMap.get(joi).getVal1() != js) {
+				jvnLockMap.get(joi).getVal1().get(0).jvnInvalidateWriterForReader(joi);
+				jvnObjectWaitMap.get(joi).add(new Pair<>(JvnLockEnum.R, js));
+			}
+			jvnLockMap.get(joi).setVal2(JvnLockEnum.NL);
+			break;
+			
+		default:
+			break;
+		
+		}
+		
+		return jvnObjectsMap.get(jvnJoinMap.get(joi));
 	}
 
+	private List<JvnRemoteServer> getListFromRemoteServer(JvnRemoteServer js) {
+		List<JvnRemoteServer> list = new ArrayList<>();
+		list.add(js);
+		return list;
+	}
+	
 	/**
 	 * Get a Write lock on a JVN object managed by a given JVN server
 	 *
@@ -107,6 +163,15 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			throws java.rmi.RemoteException, JvnException {
 		// to be completed
 		return null;
+	}
+	
+	public void jvnUnLock(int joi, JvnRemoteServer js)
+			throws java.rmi.RemoteException, JvnException {
+		if (jvnLockMap.get(joi).getVal2() == JvnLockEnum.R) {
+			jvnLockMap.get(joi).setVal2(JvnLockEnum.RC);
+		} else if (jvnLockMap.get(joi).getVal2() == JvnLockEnum.W) {
+			jvnLockMap.get(joi).setVal2(JvnLockEnum.WC);
+		}
 	}
 
 	/**
