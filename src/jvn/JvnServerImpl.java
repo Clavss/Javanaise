@@ -9,11 +9,16 @@
 
 package jvn;
 
+import utils.Pair;
+
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class JvnServerImpl
@@ -27,6 +32,12 @@ public class JvnServerImpl
 	// A JVN server is managed as a singleton 
 	private static JvnServerImpl js = null;
 	private JvnRemoteCoord jvnRemoteCoord;
+	private Object obj = new Object();
+	private boolean waiting = false;
+
+	Map<String, JvnObject> jvnObjectsMap = new HashMap<>();
+	Map<Integer, String> jvnJoinMap = new HashMap<>();
+
 
 	/**
 	 * Default constructor
@@ -95,6 +106,8 @@ public class JvnServerImpl
 		try {
 			int id = jvnRemoteCoord.jvnGetObjectId();
 			jo.setID(id);
+			jvnObjectsMap.put(jon, jo);
+			jvnJoinMap.put(id, jon);
 			jvnRemoteCoord.jvnRegisterObject(jon, jo, id, this);
 		} catch (RemoteException e) {
 			throw new jvn.JvnException();
@@ -110,7 +123,12 @@ public class JvnServerImpl
 	 **/
 	public JvnObject jvnLookupObject(String jon) throws jvn.JvnException {
 		try {
-			return jvnRemoteCoord.jvnLookupObject(jon, this);
+			JvnObject jo = jvnRemoteCoord.jvnLookupObject(jon, this);
+			if(jo != null){
+				jvnObjectsMap.put(jon, jo);
+				jvnJoinMap.put(jo.jvnGetObjectId(), jon);
+			}
+			return jo;
 		} catch (RemoteException e) {
 			throw new jvn.JvnException();
 		}
@@ -125,12 +143,10 @@ public class JvnServerImpl
 	 **/
 	public Serializable jvnLockRead(int joi) throws JvnException {
 		try {
-			jvnRemoteCoord.jvnLockRead(joi, this);
+			return jvnRemoteCoord.jvnLockRead(joi, this);
 		} catch (RemoteException e) {
 			throw new JvnException();
 		}
-		return null;
-
 	}
 
 	/**
@@ -144,14 +160,13 @@ public class JvnServerImpl
 		// to be completed
 		return null;
 	}
-	
-	public Serializable jvnUnLock(int joi) throws JvnException {
-		try {
-			jvnRemoteCoord.jvnUnLock(joi, this);
-		} catch (RemoteException e) {
-			throw new JvnException();
+
+	@Override
+	public void jvnUnLock() throws JvnException {
+		if(waiting){
+			waiting = false;
+			obj.notify();
 		}
-		return null;
 	}
 
 	/**
@@ -163,7 +178,7 @@ public class JvnServerImpl
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	public void jvnInvalidateReader(int joi) throws java.rmi.RemoteException, jvn.JvnException {
-		// to be completed 
+		jvnObjectsMap.get(jvnJoinMap.get(joi)).jvnInvalidateReader();
 	}
 
 	/**
@@ -174,8 +189,15 @@ public class JvnServerImpl
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException, jvn.JvnException {
-		// to be completed 
-		return null;
+		if(jvnObjectsMap.get(jvnJoinMap.get(joi)).getLock() == JvnLockEnum.W){
+			try {
+				waiting = true;
+				obj.wait();
+			} catch (InterruptedException e) {
+				throw new jvn.JvnException();
+			}
+		}
+		return jvnObjectsMap.get(jvnJoinMap.get(joi)).jvnInvalidateWriter();
 	}
 
 	/**
@@ -186,8 +208,8 @@ public class JvnServerImpl
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException, jvn.JvnException {
-		// to be completed 
-		return null;
+		jvnInvalidateReader(joi);
+		return this;
 	}
 
 }

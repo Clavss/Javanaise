@@ -2,9 +2,10 @@ package jvn;
 
 public enum JvnLockEnum {
 	NL,
-	RC,
-	WC,
+	RC,// client side only
+	WC,// client side only
 	R,
 	W,
-	RWC
+	RWC, // client side only
+	RW //coord side only
 }

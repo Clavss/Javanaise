@@ -24,15 +24,14 @@ import utils.Pair;
 
 public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord {
 
-	/**
-	 *
-	 */
 	int count = 0;
 	Map<String, JvnObject> jvnObjectsMap = new HashMap<>();
 	Map<Integer, Pair<List<JvnRemoteServer>, JvnLockEnum>> jvnLockMap = new HashMap<>();
 	Map<Integer, String> jvnJoinMap = new HashMap<>();
-	Map<Integer, List<Pair<JvnLockEnum,JvnRemoteServer>>> jvnObjectWaitMap = new HashMap<>();
 	private static final long serialVersionUID = 1L;
+
+	//Thread
+	final Object waiter = new Object();
 
 	public static void main(String[] args) throws Exception {
 		JvnCoordImpl obj = new JvnCoordImpl();
@@ -75,7 +74,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 				js.jvnInvalidateReader(joi);
 				jvnObjectsMap.put(jon, jo);
 				jvnJoinMap.put(joi, jon);
-				jvnObjectWaitMap.put(joi, new LinkedList<Pair<JvnLockEnum,JvnRemoteServer>>());
 				jvnLockMap.put(joi, new Pair<List<JvnRemoteServer>, JvnLockEnum>(getListFromRemoteServer(js), JvnLockEnum.NL));
 	}
 
@@ -106,38 +104,28 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			jvnLockMap.get(joi).setVal1(getListFromRemoteServer(js));
 			jvnLockMap.get(joi).setVal2(JvnLockEnum.R);
 			break;
-			
 		case R:
 			if (!jvnLockMap.get(joi).getVal1().contains(js)) {
 				jvnLockMap.get(joi).getVal1().add(js);
 			}
 			break;
 			
-		case RC:
-			if (!jvnLockMap.get(joi).getVal1().contains(js)) {
-				jvnLockMap.get(joi).setVal1(getListFromRemoteServer(js));
+		case W:
+			if (jvnLockMap.get(joi).getVal1().get(0) != js) {
+				jvnObjectsMap.put(jvnJoinMap.get(joi), (JvnObject) jvnLockMap.get(joi).getVal1().get(0).jvnInvalidateWriter(joi));
+				jvnLockMap.get(joi).setVal2(JvnLockEnum.R);
+			} else {
+				jvnLockMap.get(joi).setVal2(JvnLockEnum.RW);
+			}
+			break;
+		case RW:
+			if (jvnLockMap.get(joi).getVal1().get(0) != js) {
+				jvnObjectsMap.put(jvnJoinMap.get(joi), (JvnObject) jvnLockMap.get(joi).getVal1().get(0).jvnInvalidateWriterForReader(joi));
 			}
 			jvnLockMap.get(joi).setVal2(JvnLockEnum.R);
 			break;
-			
-		case W:
-			if (jvnLockMap.get(joi).getVal1() != js) {
-				jvnLockMap.get(joi).getVal1().get(0).jvnInvalidateWriterForReader(joi);
-				jvnObjectWaitMap.get(joi).add(new Pair<>(JvnLockEnum.R, js));
-			}
-			jvnLockMap.get(joi).setVal2(JvnLockEnum.NL);
-			break;
-			
-		case WC:
-		case RWC:
-			if (jvnLockMap.get(joi).getVal1() != js) {
-				jvnLockMap.get(joi).getVal1().get(0).jvnInvalidateWriterForReader(joi);
-				jvnObjectWaitMap.get(joi).add(new Pair<>(JvnLockEnum.R, js));
-			}
-			jvnLockMap.get(joi).setVal2(JvnLockEnum.NL);
-			break;
-			
 		default:
+			//Exception
 			break;
 		
 		}
@@ -161,18 +149,37 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 **/
 	public Serializable jvnLockWrite(int joi, JvnRemoteServer js)
 			throws java.rmi.RemoteException, JvnException {
-		// to be completed
-		return null;
-	}
-	
-	public void jvnUnLock(int joi, JvnRemoteServer js)
-			throws java.rmi.RemoteException, JvnException {
-		if (jvnLockMap.get(joi).getVal2() == JvnLockEnum.R) {
-			jvnLockMap.get(joi).setVal2(JvnLockEnum.RC);
-		} else if (jvnLockMap.get(joi).getVal2() == JvnLockEnum.W) {
-			jvnLockMap.get(joi).setVal2(JvnLockEnum.WC);
+		JvnLockEnum state = jvnLockMap.get(joi).getVal2();
+		switch (state) {
+			case NL:
+				break;
+			case R:
+			case W:
+			case RW:
+				if (jvnLockMap.get(joi).getVal1() != js) {
+					switch(state){
+						case R:
+							for(JvnRemoteServer readersJs : jvnLockMap.get(joi).getVal1()){
+								readersJs.jvnInvalidateReader(joi);
+							}
+						case W:
+							jvnObjectsMap.put(jvnJoinMap.get(joi), (JvnObject) jvnLockMap.get(joi).getVal1().get(0).jvnInvalidateWriter(joi));
+						default:
+							jvnObjectsMap.put(jvnJoinMap.get(joi), (JvnObject) jvnLockMap.get(joi).getVal1().get(0).jvnInvalidateWriterForReader(joi));
+					}
+				}
+				jvnLockMap.get(joi).setVal1(getListFromRemoteServer(js));
+				jvnLockMap.get(joi).setVal2(JvnLockEnum.W);
+				break;
+			default:
+				//Exception
+				break;
 		}
+		jvnLockMap.get(joi).setVal1(getListFromRemoteServer(js));
+		jvnLockMap.get(joi).setVal2(JvnLockEnum.W);
+		return jvnObjectsMap.get(jvnJoinMap.get(joi));
 	}
+
 
 	/**
 	 * A JVN server terminates
