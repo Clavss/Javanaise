@@ -75,7 +75,6 @@ public interface JvnLocalServer {
 	 * @throws JvnException
 	 **/
 	void jvnTerminate() throws jvn.JvnException;
-
 }
 
  

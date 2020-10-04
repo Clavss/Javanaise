@@ -19,6 +19,7 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 
 public class JvnServerImpl
@@ -29,7 +30,7 @@ public class JvnServerImpl
 	 *
 	 */
 	private static final long serialVersionUID = 1L;
-	// A JVN server is managed as a singleton 
+	// A JVN server is managed as a singleton
 	private static JvnServerImpl js = null;
 	private JvnRemoteCoord jvnRemoteCoord;
 	private Object obj = new Object();
@@ -37,7 +38,6 @@ public class JvnServerImpl
 
 	Map<String, JvnObject> jvnObjectsMap = new HashMap<>();
 	Map<Integer, String> jvnJoinMap = new HashMap<>();
-
 
 	/**
 	 * Default constructor
@@ -92,7 +92,8 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public JvnObject jvnCreateObject(Serializable o) throws jvn.JvnException {
-		return new JvnObjectImpl(o);
+		JvnObject jo = new JvnObjectImpl(o);
+		return jo;
 	}
 
 	/**
@@ -127,6 +128,7 @@ public class JvnServerImpl
 			if(jo != null){
 				jvnObjectsMap.put(jon, jo);
 				jvnJoinMap.put(jo.jvnGetObjectId(), jon);
+				jo.setLock(JvnLockEnum.NL);
 			}
 			return jo;
 		} catch (RemoteException e) {
@@ -157,8 +159,11 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public Serializable jvnLockWrite(int joi) throws JvnException {
-		// to be completed
-		return null;
+		try {
+			return jvnRemoteCoord.jvnLockWrite(joi, this);
+		} catch (RemoteException e) {
+			throw new JvnException();
+		}
 	}
 
 	@Override
@@ -210,6 +215,11 @@ public class JvnServerImpl
 	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException, jvn.JvnException {
 		jvnInvalidateReader(joi);
 		return this;
+	}
+
+	@Override
+	public String getID() throws RemoteException, JvnException {
+		return this.toString();
 	}
 
 }

@@ -89,4 +89,6 @@ public interface JvnObject extends Serializable {
 	void setID(int id);
 
 	JvnLockEnum getLock();
+
+	void setLock(JvnLockEnum lock);
 }
