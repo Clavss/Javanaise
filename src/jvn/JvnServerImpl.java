@@ -214,7 +214,7 @@ public class JvnServerImpl
 	 **/
 	public Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException, jvn.JvnException {
 		jvnInvalidateReader(joi);
-		return this;
+		return jvnObjectsMap.get(jvnJoinMap.get(joi)).jvnInvalidateWriterForReader();
 	}
 
 	@Override

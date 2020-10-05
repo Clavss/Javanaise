@@ -79,7 +79,6 @@ public class JvnObjectImpl implements JvnObject{
 
     @Override
     public void jvnInvalidateReader() throws JvnException {
-        //TODO Exception si deja nolock -> l'utilisateur à mis deux jvnLockRead()
         System.out.println("Invalidate reader");
         lockState = JvnLockEnum.NL;
     }
