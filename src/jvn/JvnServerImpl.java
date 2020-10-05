@@ -78,7 +78,11 @@ public class JvnServerImpl
 	 * @throws JvnException
 	 **/
 	public void jvnTerminate() throws jvn.JvnException {
-		// to be completed
+		try {
+			jvnRemoteCoord.jvnTerminate(this);
+		} catch (RemoteException | JvnException e) {
+			throw new JvnException();
+		}
 	}
 
 	/**
