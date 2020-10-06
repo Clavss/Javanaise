@@ -10,6 +10,7 @@
 package jvn;
 
 import java.io.Serializable;
+import java.lang.reflect.Proxy;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -43,11 +44,12 @@ public class JvnServerImpl
 	private JvnServerImpl() throws Exception {
 		super();
 		// Getting the registry
+		System.out.println("serverimpl A");
 		Registry registry = LocateRegistry.getRegistry(null);
-
+		System.out.println("serverimpl B");
 		// Looking up the registry for the remote object
 		jvnRemoteCoord = (JvnRemoteCoord) registry.lookup("IRC");
-		
+		System.out.println("serverimpl C");
 		js = this;
 	}
 	
@@ -66,7 +68,7 @@ public class JvnServerImpl
 			try {
 				js = new JvnServerImpl();
 			} catch (Exception e) {
-				throw new JvnException();
+				throw new JvnException(e.getMessage());
 			}
 		}
 		return js;
@@ -91,9 +93,11 @@ public class JvnServerImpl
 	 * @param o : the JVN object state
 	 * @throws JvnException
 	 **/
-	public JvnObject jvnCreateObject(Serializable o) throws jvn.JvnException {
-		JvnObject jo = new JvnObjectImpl(o);
-		return jo;
+	public Object jvnCreateObject(Serializable o) throws jvn.JvnException {
+		Object obj = newInstance(o);
+		// after creation, I have a write lock on the object
+		((JvnServerImpl) obj).jvnUnLock();
+		return obj;
 	}
 
 	/**
@@ -103,9 +107,10 @@ public class JvnServerImpl
 	 * @param jo  : the JVN object
 	 * @throws JvnException
 	 **/
-	public void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException {
+	public void jvnRegisterObject(String jon, Object obj) throws jvn.JvnException {
 		try {
 			int id = jvnRemoteCoord.jvnGetObjectId();
+			JvnObject jo = (JvnObject)obj;
 			jo.setID(id);
 			jvnObjectsMap.put(jon, jo);
 			jvnJoinMap.put(id, jon);
@@ -122,7 +127,7 @@ public class JvnServerImpl
 	 * @return the JVN object
 	 * @throws JvnException
 	 **/
-	public JvnObject jvnLookupObject(String jon) throws jvn.JvnException {
+	public Object jvnLookupObject(String jon) throws jvn.JvnException {
 		try {
 			JvnObject jo = jvnRemoteCoord.jvnLookupObject(jon, this);
 			if(jo != null){
@@ -220,6 +225,12 @@ public class JvnServerImpl
 	@Override
 	public String getID() throws RemoteException, JvnException {
 		return this.toString();
+	}
+	
+	
+	private Object newInstance(Serializable obj) {
+		System.out.println("Objet créé");
+		return Proxy.newProxyInstance(obj.getClass().getClassLoader(), obj.getClass().getInterfaces(), new JvnObjectImpl(obj));
 	}
 
 }

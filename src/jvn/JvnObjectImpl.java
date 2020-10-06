@@ -1,8 +1,12 @@
 package jvn;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 
-public class JvnObjectImpl implements JvnObject{
+import annotation.Lock;
+
+public class JvnObjectImpl implements JvnObject, InvocationHandler {
     /**
 	 * 
 	 */
@@ -96,4 +100,26 @@ public class JvnObjectImpl implements JvnObject{
         lockState = JvnLockEnum.NL;
         return this;
     }
+
+	@Override
+	public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
+		Object result;
+		if(m.isAnnotationPresent(Lock.class)) {
+			Lock lock = m.getAnnotation(Lock.class);
+			if(lock.type() == "r") {
+				jvnLockRead();
+			} else if (lock.type() == "w") {
+				jvnLockWrite();
+			} else {
+				// Exception
+			}
+			result = m.invoke(o, args);
+			jvnUnLock();
+		} else {
+			result = m.invoke(o, args);
+		}
+		return result;
+	}
+
+
 }
