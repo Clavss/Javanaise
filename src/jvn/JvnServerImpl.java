@@ -44,15 +44,12 @@ public class JvnServerImpl
 	private JvnServerImpl() throws Exception {
 		super();
 		// Getting the registry
-		System.out.println("serverimpl A");
 		Registry registry = LocateRegistry.getRegistry(null);
-		System.out.println("serverimpl B");
 		// Looking up the registry for the remote object
 		jvnRemoteCoord = (JvnRemoteCoord) registry.lookup("IRC");
-		System.out.println("serverimpl C");
 		js = this;
 	}
-	
+
 	public static JvnServerImpl getServer() {
 		return js;
 	}
@@ -63,7 +60,7 @@ public class JvnServerImpl
 	 *
 	 * @throws JvnException
 	 **/
-	public static JvnServerImpl jvnGetServer() throws jvn.JvnException{
+	public static JvnServerImpl jvnGetServer() throws jvn.JvnException {
 		if (js == null) {
 			try {
 				js = new JvnServerImpl();
@@ -104,13 +101,13 @@ public class JvnServerImpl
 	 * Associate a symbolic name with a JVN object
 	 *
 	 * @param jon : the JVN object name
-	 * @param jo  : the JVN object
+	 * @param obj  : the JVN object
 	 * @throws JvnException
 	 **/
 	public void jvnRegisterObject(String jon, Object obj) throws jvn.JvnException {
 		try {
 			int id = jvnRemoteCoord.jvnGetObjectId();
-			JvnObject jo = (JvnObject)obj;
+			JvnObject jo = (JvnObject) obj;
 			jo.setID(id);
 			jvnObjectsMap.put(jon, jo);
 			jvnJoinMap.put(id, jon);
@@ -119,7 +116,7 @@ public class JvnServerImpl
 			throw new jvn.JvnException();
 		}
 	}
-	
+
 	/**
 	 * Provide the reference of a JVN object being given its symbolic name
 	 *
@@ -130,7 +127,7 @@ public class JvnServerImpl
 	public Object jvnLookupObject(String jon) throws jvn.JvnException {
 		try {
 			JvnObject jo = jvnRemoteCoord.jvnLookupObject(jon, this);
-			if(jo != null){
+			if (jo != null) {
 				jvnObjectsMap.put(jon, jo);
 				jvnJoinMap.put(jo.jvnGetObjectId(), jon);
 				jo.setLock(JvnLockEnum.NL);
@@ -173,7 +170,7 @@ public class JvnServerImpl
 
 	@Override
 	public void jvnUnLock() throws JvnException {
-		if(waiting){
+		if (waiting) {
 			waiting = false;
 			obj.notify();
 		}
@@ -199,7 +196,7 @@ public class JvnServerImpl
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException, jvn.JvnException {
-		if(jvnObjectsMap.get(jvnJoinMap.get(joi)).getLock() == JvnLockEnum.W){
+		if (jvnObjectsMap.get(jvnJoinMap.get(joi)).getLock() == JvnLockEnum.W) {
 			try {
 				waiting = true;
 				obj.wait();
@@ -226,8 +223,8 @@ public class JvnServerImpl
 	public String getID() throws RemoteException, JvnException {
 		return this.toString();
 	}
-	
-	
+
+
 	private Object newInstance(Serializable obj) {
 		System.out.println("Objet créé");
 		return Proxy.newProxyInstance(obj.getClass().getClassLoader(), obj.getClass().getInterfaces(), new JvnObjectImpl(obj));
