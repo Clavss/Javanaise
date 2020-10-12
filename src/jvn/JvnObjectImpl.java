@@ -33,8 +33,7 @@ public class JvnObjectImpl implements JvnObject{
 
     @Override
     public void jvnLockRead() throws JvnException {
-        if(lockState == JvnLockEnum.WC){
-            JvnServerImpl.getServer().jvnLockRead(id);
+        if(lockState == JvnLockEnum.WC || lockState == JvnLockEnum.RWC){
             lockState = JvnLockEnum.RWC;
         }
         else if (lockState != JvnLockEnum.R && lockState != JvnLockEnum.RC){
@@ -60,7 +59,6 @@ public class JvnObjectImpl implements JvnObject{
                 lockState = JvnLockEnum.RC;
                 break;
             case W:
-            case RWC:
                 lockState = JvnLockEnum.WC;
                 break;
         }
