@@ -91,9 +91,11 @@ public class JvnServerImpl
 	 * @param o : the JVN object state
 	 * @throws JvnException
 	 **/
-	public JvnObject jvnCreateObject(Serializable o) throws jvn.JvnException {
+	public Object jvnCreateObject(String jon, Serializable o) throws jvn.JvnException {
 		JvnObject jo = new JvnObjectImpl(o);
-		return jo;
+		jo.jvnUnLock();
+		jvnRegisterObject(jon, jo);
+		return JvnProxy.newInstance(jo);
 	}
 
 	/**
@@ -103,7 +105,7 @@ public class JvnServerImpl
 	 * @param jo  : the JVN object
 	 * @throws JvnException
 	 **/
-	public void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException {
+	private void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException {
 		try {
 			int id = jvnRemoteCoord.jvnGetObjectId();
 			jo.setID(id);
@@ -122,15 +124,16 @@ public class JvnServerImpl
 	 * @return the JVN object
 	 * @throws JvnException
 	 **/
-	public JvnObject jvnLookupObject(String jon) throws jvn.JvnException {
+	public Object jvnLookupObject(String jon) throws jvn.JvnException {
 		try {
 			JvnObject jo = jvnRemoteCoord.jvnLookupObject(jon, this);
 			if(jo != null){
 				jvnObjectsMap.put(jon, jo);
 				jvnJoinMap.put(jo.jvnGetObjectId(), jon);
 				jo.setLock(JvnLockEnum.NL);
+				return JvnProxy.newInstance(jo);
 			}
-			return jo;
+			return null;
 		} catch (RemoteException e) {
 			throw new jvn.JvnException();
 		}

@@ -8,7 +8,9 @@
 
 package irc;
 
-public class Sentence implements java.io.Serializable {
+import annotation.Lock;
+
+public class Sentence implements ISentence, java.io.Serializable {
 
 	/**
 	 *
@@ -20,10 +22,12 @@ public class Sentence implements java.io.Serializable {
 		data = "";
 	}
 
+	@Lock(type="w")
 	public void write(String text) {
 		data = text;
 	}
 
+	@Lock(type="r")
 	public String read() {
 		return data;
 	}
