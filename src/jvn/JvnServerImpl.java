@@ -10,6 +10,7 @@
 package jvn;
 
 import java.io.Serializable;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -26,6 +27,9 @@ public class JvnServerImpl
 	 *
 	 */
 	private static final long serialVersionUID = 1L;
+	private static Registry registry;
+	private String addr = null;
+
 	// A JVN server is managed as a singleton
 	private static JvnServerImpl js = null;
 	private JvnRemoteCoord jvnRemoteCoord;
@@ -43,10 +47,10 @@ public class JvnServerImpl
 	private JvnServerImpl() throws Exception {
 		super();
 		// Getting the registry
-		Registry registry = LocateRegistry.getRegistry(null);
+		registry = LocateRegistry.getRegistry(addr);
 
 		// Looking up the registry for the remote object
-		jvnRemoteCoord = (JvnRemoteCoord) registry.lookup("IRC");
+		jvnRemoteCoord = (JvnRemoteCoord) registry.lookup("Javanaise");
 		
 		js = this;
 	}
@@ -66,7 +70,7 @@ public class JvnServerImpl
 			try {
 				js = new JvnServerImpl();
 			} catch (Exception e) {
-				throw new JvnException();
+				throw new JvnException("Unable to start the local server");
 			}
 		}
 		return js;
@@ -80,8 +84,9 @@ public class JvnServerImpl
 	public void jvnTerminate() throws jvn.JvnException {
 		try {
 			jvnRemoteCoord.jvnTerminate(this);
+			//registry.unbind(addr);
 		} catch (RemoteException | JvnException e) {
-			throw new JvnException();
+			throw new JvnException("Unable to reach the distant server");
 		}
 	}
 
@@ -113,7 +118,7 @@ public class JvnServerImpl
 			jvnJoinMap.put(id, jon);
 			jvnRemoteCoord.jvnRegisterObject(jon, jo, id, this);
 		} catch (RemoteException e) {
-			throw new jvn.JvnException();
+			throw new jvn.JvnException("Unable to reach the distant server");
 		}
 	}
 	
@@ -124,7 +129,7 @@ public class JvnServerImpl
 	 * @return the JVN object
 	 * @throws JvnException
 	 **/
-	public Object jvnLookupObject(String jon) throws jvn.JvnException {
+	public synchronized Object jvnLookupObject(String jon) throws jvn.JvnException {
 		try {
 			JvnObject jo = jvnRemoteCoord.jvnLookupObject(jon, this);
 			if(jo != null){
@@ -135,7 +140,7 @@ public class JvnServerImpl
 			}
 			return null;
 		} catch (RemoteException e) {
-			throw new jvn.JvnException();
+			throw new jvn.JvnException("Unable to reach the distant server");
 		}
 	}
 
@@ -150,7 +155,7 @@ public class JvnServerImpl
 		try {
 			return jvnRemoteCoord.jvnLockRead(joi, this);
 		} catch (RemoteException e) {
-			throw new JvnException();
+			throw new JvnException("Unable to reach the distant server");
 		}
 	}
 
@@ -165,7 +170,7 @@ public class JvnServerImpl
 		try {
 			return jvnRemoteCoord.jvnLockWrite(joi, this);
 		} catch (RemoteException e) {
-			throw new JvnException();
+			throw new JvnException("Unable to reach the distant server");
 		}
 	}
 

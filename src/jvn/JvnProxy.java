@@ -30,7 +30,7 @@ public class JvnProxy implements InvocationHandler {
 			} else if (lock.type().equals("w")) {
 				jo.jvnLockWrite();
 			} else {
-				// Exception
+				throw new JvnException("Invalid annotation, please use 'r' or 'w'");
 			}
 			result = m.invoke(jo.jvnGetSharedObject(), args);
 			jo.jvnUnLock();

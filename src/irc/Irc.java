@@ -99,7 +99,6 @@ class readListener implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		// invoke the method
 		String s = irc.sentence.read();
-		System.out.println("read :" + s);
 
 		// display the read value
 		irc.data.setText(s);
@@ -125,8 +124,7 @@ class writeListener implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		// get the value to be written from the buffer
 		String s = irc.data.getText();
-		System.out.println("write :" + s);
-		
+
 		// invoke the method
 		irc.sentence.write(s);
 	}

@@ -42,7 +42,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 **/
 	private JvnCoordImpl() throws Exception {
 		Registry registry = LocateRegistry.createRegistry(1099);
-		registry.bind("IRC", this);
+		registry.bind("Javanaise", this);
 		System.out.println("Server ready");
 	}
 
@@ -81,7 +81,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @param js  : the remote reference of the JVNServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
+	public synchronized JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
 			throws java.rmi.RemoteException, jvn.JvnException {
 		return jvnObjectsMap.get(jon);
 	}
@@ -94,7 +94,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
-	public Serializable jvnLockRead(int joi, JvnRemoteServer js)
+	public synchronized Serializable jvnLockRead(int joi, JvnRemoteServer js)
 			throws java.rmi.RemoteException, JvnException {
 		switch (jvnLockMap.get(joi).getVal2()) {
 		case NL:
@@ -146,7 +146,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
-	public Serializable jvnLockWrite(int joi, JvnRemoteServer js)
+	public synchronized Serializable jvnLockWrite(int joi, JvnRemoteServer js)
 			throws java.rmi.RemoteException, JvnException {
 		JvnLockEnum state = jvnLockMap.get(joi).getVal2();
 		switch (state) {
@@ -187,11 +187,11 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @param js : the remote reference of the server
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
-	public void jvnTerminate(JvnRemoteServer js)
+	public synchronized void jvnTerminate(JvnRemoteServer js)
 			throws java.rmi.RemoteException, JvnException {
 		for(int key : jvnLockMap.keySet()) {
 			Pair<List<JvnRemoteServer>, JvnLockEnum> value = jvnLockMap.get(key);
-			if(value.getVal2() == JvnLockEnum.W && value.getVal1().get(0).equals(js.getID())) {
+			if(value.getVal2() == JvnLockEnum.W && value.getVal1().get(0).getID().equals(js.getID())) {
 				value.setVal1(null);
 				value.setVal2(JvnLockEnum.NL);
 				jvnLockMap.replace(key, value);
