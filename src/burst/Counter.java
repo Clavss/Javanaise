@@ -15,8 +15,8 @@ public class Counter implements ICounter, java.io.Serializable{
     }
 
     @Lock(type="w")
-    public void setCounter(int counter){
-        val = counter;
+    public void increaseCounter(){
+        val++;
     }
 
 }

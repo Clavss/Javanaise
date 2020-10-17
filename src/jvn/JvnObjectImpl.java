@@ -77,20 +77,17 @@ public class JvnObjectImpl implements JvnObject{
 
     @Override
     public void jvnInvalidateReader() throws JvnException {
-        System.out.println("Invalidate reader");
         lockState = JvnLockEnum.NL;
     }
 
     @Override
     public Serializable jvnInvalidateWriter() throws JvnException {
-        System.out.println("Invalidate writer");
         lockState = JvnLockEnum.NL;
         return this;
     }
 
     @Override
     public Serializable jvnInvalidateWriterForReader() throws JvnException {
-        System.out.println("Invalidate writer for reader");
         lockState = JvnLockEnum.NL;
         return this;
     }
