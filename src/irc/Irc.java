@@ -33,20 +33,10 @@ public class Irc {
 	 **/
 	public static void main(String argv[]) {
 		try {
-
-			// initialize JVN instance
 			JvnServerImpl js = JvnServerImpl.jvnGetServer();
-
-			// look up the IRC object in the JVN server
-			// if not found, create it, and register it in the JVN server
-			ISentence jo = (ISentence)js.jvnLookupObject("IRC");
-			
-			if (jo == null) {
-				jo = (ISentence)js.jvnCreateObject("IRC", new Sentence());
-			}
+			ISentence jo = (ISentence)js.jvnLookupObject("IRC", new Sentence());
 			// create the graphical part of the Chat application
 			new Irc(jo);
-
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("IRC problem : " + e.getMessage());

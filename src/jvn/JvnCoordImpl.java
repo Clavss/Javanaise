@@ -29,9 +29,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
     Map<Integer, String> jvnJoinMap = new HashMap<>();
     private static final long serialVersionUID = 1L;
 
-    //Thread
-    final Object waiter = new Object();
-
     public static void main(String[] args) throws Exception {
         JvnCoordImpl obj = new JvnCoordImpl();
     }
@@ -53,7 +50,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
      *
      * @throws java.rmi.RemoteException,JvnException
      **/
-    public int jvnGetObjectId()
+    public synchronized int jvnGetObjectId()
             throws java.rmi.RemoteException, jvn.JvnException {
         // to be completed
         return count++;
@@ -68,7 +65,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
      * @param js  : the remote reference of the JVNServer
      * @throws java.rmi.RemoteException,JvnException
      **/
-    public void jvnRegisterObject(String jon, JvnObject jo, int joi, JvnRemoteServer js)
+    public synchronized void jvnRegisterObject(String jon, JvnObject jo, int joi, JvnRemoteServer js)
             throws java.rmi.RemoteException, jvn.JvnException {
         jvnObjectsMap.put(jon, jo);
         jvnJoinMap.put(joi, jon);
@@ -110,7 +107,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
                     jvnLockMap.get(joi).getVal1().add(js);
                 }
                 break;
-
             case W:
                 if (jvnLockMap.get(joi).getVal1().size() == 0) {
                     jvnLockMap.get(joi).setVal2(JvnLockEnum.R);
@@ -142,7 +138,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
                 break;
 
         }
-        System.out.println(js.toString() + " got the lock " + jvnLockMap.get(joi).getVal2() + " on the object " + joi);
+        //System.out.println(js.toString() + " got the lock " + jvnLockMap.get(joi).getVal2() + " on the object " + joi);
         return jvnObjectsMap.get(jvnJoinMap.get(joi));
     }
 
@@ -166,6 +162,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
         if (jvnLockMap.get(joi) == null) {
             throw new JvnException("This object has not been created yet");
         }
+        System.out.println(js.getID() + " Demande le lock, etat actuel : "+state+", ancien proprio :" + jvnLockMap.get(joi).getVal1().get(0).getID());
         switch (state) {
             case NL:
                 break;
@@ -199,15 +196,12 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
         }
         jvnLockMap.get(joi).setVal1(getListFromRemoteServer(js));
         jvnLockMap.get(joi).setVal2(JvnLockEnum.W);
-        System.out.println(js.toString() + " got the lock " + jvnLockMap.get(joi).getVal2() + " on the object " + joi);
+        //System.out.println(js.toString() + " got the lock " + jvnLockMap.get(joi).getVal2() + " on the object " + joi);
         return jvnObjectsMap.get(jvnJoinMap.get(joi));
     }
 
-    private boolean sameID(JvnRemoteServer js1, JvnRemoteServer js2) {
+    private synchronized boolean sameID(JvnRemoteServer js1, JvnRemoteServer js2) {
         try {
-            if(!js1.toString().equals(js2.toString())){
-                System.out.println("test");
-            }
             boolean result =  js1.getID().equals(js2.getID());
             return result;
         } catch (Exception e) {

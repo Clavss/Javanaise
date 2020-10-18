@@ -36,7 +36,7 @@ public interface JvnLocalServer {
 	 * @return the JVN object
 	 * @throws JvnException
 	 **/
-	Object jvnLookupObject(String jon) throws jvn.JvnException;
+	Object jvnLookupObject(String jon, Serializable o) throws jvn.JvnException;
 
 	/**
 	 * Get a Read lock on a JVN object

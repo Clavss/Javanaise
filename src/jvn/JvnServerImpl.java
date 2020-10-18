@@ -9,6 +9,8 @@
 
 package jvn;
 
+import burst.ICounter;
+
 import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -23,9 +25,6 @@ public class JvnServerImpl
 		extends UnicastRemoteObject
 		implements JvnLocalServer, JvnRemoteServer {
 
-	/**
-	 *
-	 */
 	private static final long serialVersionUID = 1L;
 	private static Registry registry;
 	private String addr = null;
@@ -129,7 +128,7 @@ public class JvnServerImpl
 	 * @return the JVN object
 	 * @throws JvnException
 	 **/
-	public synchronized Object jvnLookupObject(String jon) throws jvn.JvnException {
+	public synchronized Object jvnLookupObject(String jon, Serializable o) throws jvn.JvnException {
 		try {
 			JvnObject jo = jvnRemoteCoord.jvnLookupObject(jon, this);
 			if(jo != null){
@@ -137,8 +136,9 @@ public class JvnServerImpl
 				jvnJoinMap.put(jo.jvnGetObjectId(), jon);
 				jo.setLock(JvnLockEnum.NL);
 				return JvnProxy.newInstance(jo);
+			} else {
+				return jvnCreateObject(jon, o);
 			}
-			return null;
 		} catch (RemoteException e) {
 			throw new jvn.JvnException("Unable to reach the distant server");
 		}
@@ -178,7 +178,13 @@ public class JvnServerImpl
 	public void jvnUnLock() throws JvnException {
 		if(waiting){
 			waiting = false;
-			obj.notify();
+			try {
+				synchronized (obj){
+					obj.notify();
+				}
+			} catch (Exception e){
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -205,7 +211,9 @@ public class JvnServerImpl
 		if(jvnObjectsMap.get(jvnJoinMap.get(joi)).getLock() == JvnLockEnum.W){
 			try {
 				waiting = true;
-				obj.wait();
+				synchronized (obj) {
+					obj.wait();
+				}
 			} catch (InterruptedException e) {
 				throw new jvn.JvnException();
 			}

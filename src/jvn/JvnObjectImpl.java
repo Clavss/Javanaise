@@ -1,5 +1,7 @@
 package jvn;
 
+import burst.ICounter;
+
 import java.io.Serializable;
 
 public class JvnObjectImpl implements JvnObject{
@@ -53,7 +55,7 @@ public class JvnObjectImpl implements JvnObject{
     }
 
     @Override
-    public void jvnUnLock() throws JvnException {
+    public synchronized void jvnUnLock() throws JvnException {
         switch(lockState){
             case R:
                 lockState = JvnLockEnum.RC;
@@ -76,18 +78,18 @@ public class JvnObjectImpl implements JvnObject{
     }
 
     @Override
-    public void jvnInvalidateReader() throws JvnException {
+    public  void jvnInvalidateReader() throws JvnException {
         lockState = JvnLockEnum.NL;
     }
 
     @Override
-    public Serializable jvnInvalidateWriter() throws JvnException {
+    public  Serializable jvnInvalidateWriter() throws JvnException {
         lockState = JvnLockEnum.NL;
         return this;
     }
 
     @Override
-    public Serializable jvnInvalidateWriterForReader() throws JvnException {
+    public  Serializable jvnInvalidateWriterForReader() throws JvnException {
         lockState = JvnLockEnum.NL;
         return this;
     }

@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import annotation.Lock;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 public class JvnProxy implements InvocationHandler {
 	private JvnObject jo;

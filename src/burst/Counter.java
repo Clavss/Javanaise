@@ -4,13 +4,13 @@ import annotation.Lock;
 
 public class Counter implements ICounter, java.io.Serializable{
     private static final long serialVersionUID = 1L;
-    private int val;
+    private long val;
 
     public Counter(){
         val = 0;
     }
     @Lock(type="r")
-    public int getCounter() {
+    public long getCounter() {
         return val;
     }
 
