@@ -7,16 +7,11 @@
 
 package irc;
 
-import java.awt.Button;
-import java.awt.Color;
-import java.awt.Frame;
-import java.awt.GridLayout;
-import java.awt.TextArea;
-import java.awt.TextField;
+import jvn.JvnServerImpl;
+
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import jvn.JvnServerImpl;
 
 
 public class Irc {
@@ -34,7 +29,7 @@ public class Irc {
 	public static void main(String argv[]) {
 		try {
 			JvnServerImpl js = JvnServerImpl.jvnGetServer();
-			ISentence jo = (ISentence)js.jvnLookupObject("IRC", new Sentence());
+			ISentence jo = (ISentence) js.jvnLookupObject("IRC", new Sentence());
 			// create the graphical part of the Chat application
 			new Irc(jo);
 		} catch (Exception e) {

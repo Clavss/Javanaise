@@ -56,7 +56,7 @@ public interface JvnLocalServer {
 	 **/
 	Serializable jvnLockWrite(int joi) throws JvnException;
 
-	
+
 	void jvnUnLock() throws JvnException;
 
 	/**
@@ -65,6 +65,7 @@ public interface JvnLocalServer {
 	 * @throws JvnException
 	 **/
 	void jvnTerminate() throws jvn.JvnException;
+
 }
 
  

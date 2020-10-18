@@ -1,19 +1,19 @@
 package jvn;
 
+import annotation.Lock;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import annotation.Lock;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
-
 public class JvnProxy implements InvocationHandler {
+
 	private JvnObject jo;
-	
+
 	private JvnProxy(JvnObject jo) {
 		this.jo = jo;
 	}
-	
+
 	public static Object newInstance(JvnObject jo) throws JvnException {
 		Object obj = jo.jvnGetSharedObject();
 		return java.lang.reflect.Proxy.newProxyInstance(
@@ -21,8 +21,8 @@ public class JvnProxy implements InvocationHandler {
 				obj.getClass().getInterfaces(),
 				new JvnProxy(jo));
 	}
-	
-	public Object invoke(Object proxy, Method m, Object args[]) throws JvnException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+
+	public Object invoke(Object proxy, Method m, Object[] args) throws JvnException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Object result;
 		if (m.isAnnotationPresent(Lock.class)) {
 			Lock lock = m.getAnnotation(Lock.class);
@@ -40,5 +40,6 @@ public class JvnProxy implements InvocationHandler {
 		}
 		return result;
 	}
+
 }
 

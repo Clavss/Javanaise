@@ -9,10 +9,7 @@
 
 package jvn;
 
-import burst.ICounter;
-
 import java.io.Serializable;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -50,10 +47,10 @@ public class JvnServerImpl
 
 		// Looking up the registry for the remote object
 		jvnRemoteCoord = (JvnRemoteCoord) registry.lookup("Javanaise");
-		
+
 		js = this;
 	}
-	
+
 	public static JvnServerImpl getServer() {
 		return js;
 	}
@@ -64,7 +61,7 @@ public class JvnServerImpl
 	 *
 	 * @throws JvnException
 	 **/
-	public static JvnServerImpl jvnGetServer() throws jvn.JvnException{
+	public static JvnServerImpl jvnGetServer() throws jvn.JvnException {
 		if (js == null) {
 			try {
 				js = new JvnServerImpl();
@@ -120,7 +117,7 @@ public class JvnServerImpl
 			throw new jvn.JvnException("Unable to reach the distant server");
 		}
 	}
-	
+
 	/**
 	 * Provide the reference of a JVN object being given its symbolic name
 	 *
@@ -131,7 +128,7 @@ public class JvnServerImpl
 	public synchronized Object jvnLookupObject(String jon, Serializable o) throws jvn.JvnException {
 		try {
 			JvnObject jo = jvnRemoteCoord.jvnLookupObject(jon, this);
-			if(jo != null){
+			if (jo != null) {
 				jvnObjectsMap.put(jon, jo);
 				jvnJoinMap.put(jo.jvnGetObjectId(), jon);
 				jo.setLock(JvnLockEnum.NL);
@@ -176,13 +173,13 @@ public class JvnServerImpl
 
 	@Override
 	public void jvnUnLock() throws JvnException {
-		if(waiting){
+		if (waiting) {
 			waiting = false;
 			try {
-				synchronized (obj){
+				synchronized (obj) {
 					obj.notify();
 				}
-			} catch (Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -208,7 +205,7 @@ public class JvnServerImpl
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	public Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException, jvn.JvnException {
-		if(jvnObjectsMap.get(jvnJoinMap.get(joi)).getLock() == JvnLockEnum.W){
+		if (jvnObjectsMap.get(jvnJoinMap.get(joi)).getLock() == JvnLockEnum.W) {
 			try {
 				waiting = true;
 				synchronized (obj) {
