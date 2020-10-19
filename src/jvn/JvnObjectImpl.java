@@ -45,7 +45,7 @@ public class JvnObjectImpl implements JvnObject {
 	}
 
 	@Override
-	public void jvnLockWrite() throws JvnException {
+	public synchronized void jvnLockWrite() throws JvnException {
 		if (lockState != JvnLockEnum.WC && lockState != JvnLockEnum.RWC && lockState != JvnLockEnum.W) {
 			this.o = ((JvnObject) JvnServerImpl.getServer().jvnLockWrite(id)).jvnGetSharedObject();
 		}

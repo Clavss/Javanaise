@@ -9,4 +9,5 @@ To run the little chat application:
 To perform some burst tests on our Javanaise implementation:  
 - launch the coordinator (src/jvn/JvnCoordImpl)  
 - launch 2 burst servers (src/burst/Burst)  
+	- One with argument 0 and the other with argument 1  
 - launch the runner (src/burst/BurstRunner)  

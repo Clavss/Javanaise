@@ -164,7 +164,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 		if (jvnLockMap.get(joi) == null) {
 			throw new JvnException("This object has not been created yet");
 		}
-		System.out.println(js.getID() + " Demande le lock, etat actuel : " + state + ", ancien proprio :" + jvnLockMap.get(joi).getVal1().get(0).getID());
 		switch (state) {
 			case NL:
 				break;
@@ -201,7 +200,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 		}
 		jvnLockMap.get(joi).setVal1(getListFromRemoteServer(js));
 		jvnLockMap.get(joi).setVal2(JvnLockEnum.W);
-		//System.out.println(js.toString() + " got the lock " + jvnLockMap.get(joi).getVal2() + " on the object " + joi);
 		return jvnObjectsMap.get(jvnJoinMap.get(joi));
 	}
 
